@@ -1,0 +1,50 @@
+version: "3.1"
+services:
+  chat-www:
+    build: .
+    container_name: chat-www
+    ports:
+      - "83:80"
+    volumes:
+      - ./:/var/www/html
+    environment:
+      XDEBUG_CLIENT_HOST: 172.17.0.1
+      XDEBUG_CLIENT_PORT: 9001
+      PHP_IDE_CONFIG: serverName=chat-www-server'
+    networks:
+      - chat-www-network
+    links:
+      - db  
+  db:
+    image: mysql
+    ports: 
+        - "3307:3306"
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+        MYSQL_DATABASE: laravel
+        MYSQL_PASSWORD: test
+        MYSQL_ROOT_PASSWORD: test 
+    volumes:
+        - ./dump:/docker-entrypoint-initdb.d
+        - ./conf:/etc/mysql/conf.d
+        - persistent:/var/lib/mysql
+    networks:
+        - chat-www-network
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    links: 
+        - db:db
+    ports:
+        - 8001:80
+    environment:
+        MYSQL_USER: root
+        MYSQL_PASSWORD: test
+        MYSQL_ROOT_PASSWORD: test
+    networks:
+        - chat-www-network
+
+volumes:
+  persistent: {}
+
+networks:
+  chat-www-network:
